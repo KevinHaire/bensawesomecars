@@ -85,6 +85,8 @@ def generate():
     c = canvas.Canvas(pdf_file, pagesize=letter)
 
     c.setFont("Helvetica-Bold", 18)
+    
+    c.drawString(50, 750, "<img src='https://dr9lgy7hqz7qh.cloudfront.net/wp-content/uploads/2025/03/28163529/Bourgeois_motors_ford_header%402x.png') />")
     c.drawString(50, 750, title)
 
     c.setFont("Helvetica", 12)
@@ -98,7 +100,7 @@ def generate():
     c.drawText(text)
 
     if img_path:
-        c.drawImage(img_path, 50, 380, width=450, height=250)
+        c.drawImage(img_path, 50, 380)
 
     c.showPage()
     c.save()
