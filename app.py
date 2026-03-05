@@ -48,7 +48,7 @@ def generate():
     image_url = vehicle["pictureURL"]
     img_path = None
 
-    # fallback if pictureURL is missing
+    # fallback if pictureURL missing
     if image_url == "N/A":
         try:
             page = requests.get(vehicle["link"]).text
@@ -80,7 +80,7 @@ def generate():
 
     pdf_file = f"{stock}.pdf"
 
-    # create first page PDF
+    # create first page
     c = canvas.Canvas(pdf_file, pagesize=letter)
 
     page_width, page_height = letter
@@ -94,7 +94,7 @@ def generate():
     c.drawString(50, 725, f"Stock: {stock}")
     c.drawString(50, 705, f"VIN: {vin}")
 
-    # manager notes
+    # notes
     c.drawString(50, 675, "Manager Notes:")
 
     text = c.beginText(50, 655)
@@ -102,7 +102,7 @@ def generate():
     text.textLines(notes)
     c.drawText(text)
 
-    # vehicle image centered at 80% width
+    # vehicle image (bottom centered, 80% width)
     if img_path:
         try:
             img = Image.open(img_path)
@@ -114,8 +114,12 @@ def generate():
             new_width = target_width
             new_height = img_h * scale
 
+            # center horizontally
             x_position = (page_width - new_width) / 2
-            y_position = 300
+
+            # bottom margin
+            bottom_margin = 40
+            y_position = bottom_margin
 
             c.drawImage(img_path, x_position, y_position, width=new_width, height=new_height)
 
@@ -125,7 +129,7 @@ def generate():
     c.showPage()
     c.save()
 
-    # merge with window sticker
+    # merge sticker as page 2
     if sticker_file:
 
         writer = PdfWriter()
