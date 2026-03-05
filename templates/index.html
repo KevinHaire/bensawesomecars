@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Vehicle Sheet Generator</title>
+<style>
+body { font-family: Arial; margin: 40px; }
+textarea { width: 500px; }
+input { width: 300px; }
+button { padding:10px 20px; font-size:16px; }
+</style>
+</head>
+<body>
+
+<h2>Vehicle Sheet Generator</h2>
+
+<form action="/generate" method="post">
+
+<p>
+Stock Number<br>
+<input type="text" name="stock">
+</p>
+
+<p>
+Manager Notes<br>
+<textarea name="notes" rows="8"></textarea>
+</p>
+
+<button type="submit">Generate PDF</button>
+
+</form>
+
+</body>
+</html>
