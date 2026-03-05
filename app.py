@@ -4,9 +4,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from PIL import Image
 from io import BytesIO
-import re
 from PyPDF2 import PdfReader, PdfWriter
 import os
+import re
 
 app = Flask(__name__)
 
@@ -31,6 +31,7 @@ def index():
 
 @app.route("/generate", methods=["POST"])
 def generate():
+
     stock = request.form["stock"]
     notes = request.form["notes"]
 
@@ -43,6 +44,7 @@ def generate():
     vin = vehicle["vin"]
 
     sticker_url = f"https://www.windowsticker.forddirect.com/windowsticker.pdf?vin={vin}"
+
     image_url = vehicle["pictureURL"]
     img_path = None
 
@@ -68,63 +70,64 @@ def generate():
     # download window sticker
     sticker_file = None
     try:
-        sticker_response = requests.get(sticker_url)
-        if sticker_response.status_code == 200:
+        r = requests.get(sticker_url)
+        if r.status_code == 200:
             sticker_file = f"{stock}_sticker.pdf"
             with open(sticker_file, "wb") as f:
-                f.write(sticker_response.content)
+                f.write(r.content)
     except:
         sticker_file = None
 
     pdf_file = f"{stock}.pdf"
 
-    # create main PDF
+    # create first page PDF
     c = canvas.Canvas(pdf_file, pagesize=letter)
+
     page_width, page_height = letter
 
+    # title
     c.setFont("Helvetica-Bold", 18)
     c.drawString(50, 750, title)
 
+    # vehicle info
     c.setFont("Helvetica", 12)
-    c.drawString(50, 730, f"Stock: {stock}")
-    c.drawString(50, 710, f"VIN: {vin}")
+    c.drawString(50, 725, f"Stock: {stock}")
+    c.drawString(50, 705, f"VIN: {vin}")
 
-    c.drawString(50, 670, "Manager Notes:")
+    # manager notes
+    c.drawString(50, 675, "Manager Notes:")
 
-    text = c.beginText(50, 650)
+    text = c.beginText(50, 655)
+    text.setFont("Helvetica", 11)
     text.textLines(notes)
     c.drawText(text)
 
-if img_path:
-    try:
-        img = Image.open(img_path)
+    # vehicle image centered at 80% width
+    if img_path:
+        try:
+            img = Image.open(img_path)
+            img_w, img_h = img.size
 
-        img_w, img_h = img.size
+            target_width = page_width * 0.8
+            scale = target_width / img_w
 
-        # target width = 80% of page
-        target_width = page_width * 0.8
+            new_width = target_width
+            new_height = img_h * scale
 
-        # maintain aspect ratio
-        scale = target_width / img_w
-        new_width = target_width
-        new_height = img_h * scale
+            x_position = (page_width - new_width) / 2
+            y_position = 300
 
-        # center horizontally
-        x_position = (page_width - new_width) / 2
+            c.drawImage(img_path, x_position, y_position, width=new_width, height=new_height)
 
-        # place below notes
-        y_position = 350
-
-        c.drawImage(img_path, x_position, y_position, width=new_width, height=new_height)
-
-    except:
-        pass
+        except:
+            pass
 
     c.showPage()
     c.save()
 
-    # merge with window sticker if available
+    # merge with window sticker
     if sticker_file:
+
         writer = PdfWriter()
 
         main_pdf = PdfReader(pdf_file)
@@ -132,16 +135,17 @@ if img_path:
 
         for page in main_pdf.pages:
             writer.add_page(page)
+
         for page in sticker_pdf.pages:
             writer.add_page(page)
 
         merged_file = f"{stock}_complete.pdf"
+
         with open(merged_file, "wb") as f:
             writer.write(f)
 
         return send_file(merged_file, as_attachment=True)
 
-    # fallback if no sticker
     return send_file(pdf_file, as_attachment=True)
 
 
