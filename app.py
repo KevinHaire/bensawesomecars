@@ -14,7 +14,6 @@ FEED_URL = "https://www.bourgeoismotors.com/inventory/feed"
 
 
 def get_vehicle(stock):
-
     r = requests.get(FEED_URL)
     data = r.json()
 
@@ -32,7 +31,6 @@ def index():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-
     stock = request.form["stock"]
     notes = request.form["notes"]
 
@@ -45,9 +43,7 @@ def generate():
     vin = vehicle["vin"]
 
     sticker_url = f"https://www.windowsticker.forddirect.com/windowsticker.pdf?vin={vin}"
-
     image_url = vehicle["pictureURL"]
-
     img_path = None
 
     # fallback if pictureURL is missing
@@ -82,11 +78,11 @@ def generate():
 
     pdf_file = f"{stock}.pdf"
 
+    # create main PDF
     c = canvas.Canvas(pdf_file, pagesize=letter)
+    page_width, page_height = letter
 
     c.setFont("Helvetica-Bold", 18)
-    
-    c.drawString(50, 750, "<img src='https://dr9lgy7hqz7qh.cloudfront.net/wp-content/uploads/2025/03/28163529/Bourgeois_motors_ford_header%402x.png') />")
     c.drawString(50, 750, title)
 
     c.setFont("Helvetica", 12)
@@ -99,32 +95,23 @@ def generate():
     text.textLines(notes)
     c.drawText(text)
 
-from reportlab.lib.pagesizes import letter
-from PIL import Image
-
-if img_path:
-    # Open image to get original size
-    img = Image.open(img_path)
-    img_w, img_h = img.size
-
-    # Page dimensions
-    page_width, page_height = letter
-
-    # Scale image to full page width
-    scale = page_width / img_w
-    new_width = page_width
-    new_height = img_h * scale
-
-    # Position image 50pt from top of content area (adjust if needed)
-    y_position = 380  # or use: y_position = page_height - new_height - 50 for top margin
-    c.drawImage(img_path, 0, y_position, width=new_width, height=new_height)
+    # full-width vehicle image
+    if img_path:
+        try:
+            img = Image.open(img_path)
+            scale = page_width / img.width
+            new_width = page_width
+            new_height = img.height * scale
+            y_position = 380  # adjust vertical position if needed
+            c.drawImage(img_path, 0, y_position, width=new_width, height=new_height)
+        except:
+            pass
 
     c.showPage()
     c.save()
 
-    # merge with window sticker
+    # merge with window sticker if available
     if sticker_file:
-
         writer = PdfWriter()
 
         main_pdf = PdfReader(pdf_file)
@@ -132,17 +119,16 @@ if img_path:
 
         for page in main_pdf.pages:
             writer.add_page(page)
-
         for page in sticker_pdf.pages:
             writer.add_page(page)
 
         merged_file = f"{stock}_complete.pdf"
-
         with open(merged_file, "wb") as f:
             writer.write(f)
 
         return send_file(merged_file, as_attachment=True)
 
+    # fallback if no sticker
     return send_file(pdf_file, as_attachment=True)
 
 
