@@ -44,11 +44,13 @@ def generate():
 
     sticker_url = f"https://www.windowsticker.forddirect.com/windowsticker.pdf?vin={vin}"
 
-    page = requests.get(vehicle["link"]).text
-    match = re.search(r'https://[^"]+\.(jpg|jpeg|png)', page)
+    image_url = vehicle["pictureURL"]
+    
+    # page = requests.get(vehicle["link"]).text
+    # match = re.search(r'https://[^"]+\.(jpg|jpeg|png)', page)
 
-    image_url = match.group(0) if match else None
-    img_path = None
+    # image_url = match.group(0) if match else None
+    # img_path = None
 
     if image_url:
         img_data = requests.get(image_url).content
