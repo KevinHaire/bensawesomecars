@@ -1,0 +1,60 @@
+
+Vehicle Sheet Generator
+=======================
+
+SETUP (Local Testing)
+
+1. Install Python 3.10+
+
+2. Install dependencies:
+
+   pip install -r requirements.txt
+
+3. Edit app.py
+
+   Replace:
+
+   FEED_URL = "PASTE_FEED_URL_HERE"
+
+   with your actual inventory feed URL.
+
+4. Run the app:
+
+   python app.py
+
+5. Open browser:
+
+   http://127.0.0.1:5000
+
+
+Hosting Online (Simple Option)
+
+Recommended: Render.com
+
+Steps:
+
+1. Create free account at https://render.com
+2. Create new "Web Service"
+3. Upload this project folder
+4. Set build command:
+
+   pip install -r requirements.txt
+
+5. Start command:
+
+   python app.py
+
+Render will give you a public URL like:
+
+https://vehicle-sheet.onrender.com
+
+
+Better Production Setup
+
+Use:
+
+gunicorn app:app
+
+instead of:
+
+python app.py
