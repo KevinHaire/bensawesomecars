@@ -8,7 +8,7 @@ import re
 
 app = Flask(__name__)
 
-FEED_URL = "PASTE_FEED_URL_HERE"
+FEED_URL = "www.bourgeoismotors.com/inventory/feed"
 
 
 def get_vehicle(stock):
