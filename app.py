@@ -5,6 +5,8 @@ from reportlab.pdfgen import canvas
 from PIL import Image
 from io import BytesIO
 import re
+from PyPDF2 import PdfReader, PdfWriter
+import os
 
 app = Flask(__name__)
 
@@ -45,18 +47,38 @@ def generate():
     sticker_url = f"https://www.windowsticker.forddirect.com/windowsticker.pdf?vin={vin}"
 
     image_url = vehicle["pictureURL"]
-    
-    # page = requests.get(vehicle["link"]).text
-    # match = re.search(r'https://[^"]+\.(jpg|jpeg|png)', page)
 
-    # image_url = match.group(0) if match else None
-    # img_path = None
+    img_path = None
 
+    # fallback if pictureURL is missing
+    if image_url == "N/A":
+        try:
+            page = requests.get(vehicle["link"]).text
+            match = re.search(r'https://[^"]+\.(jpg|jpeg|png)', page)
+            image_url = match.group(0) if match else None
+        except:
+            image_url = None
+
+    # download vehicle image
     if image_url:
-        img_data = requests.get(image_url).content
-        img = Image.open(BytesIO(img_data))
-        img_path = "vehicle.jpg"
-        img.save(img_path)
+        try:
+            img_data = requests.get(image_url).content
+            img = Image.open(BytesIO(img_data))
+            img_path = f"{stock}_vehicle.jpg"
+            img.save(img_path)
+        except:
+            img_path = None
+
+    # download window sticker
+    sticker_file = None
+    try:
+        sticker_response = requests.get(sticker_url)
+        if sticker_response.status_code == 200:
+            sticker_file = f"{stock}_sticker.pdf"
+            with open(sticker_file, "wb") as f:
+                f.write(sticker_response.content)
+    except:
+        sticker_file = None
 
     pdf_file = f"{stock}.pdf"
 
@@ -68,11 +90,10 @@ def generate():
     c.setFont("Helvetica", 12)
     c.drawString(50, 730, f"Stock: {stock}")
     c.drawString(50, 710, f"VIN: {vin}")
-    c.drawString(50, 690, f"Window Sticker: {sticker_url}")
 
-    c.drawString(50, 660, "Manager Notes:")
+    c.drawString(50, 670, "Manager Notes:")
 
-    text = c.beginText(50, 640)
+    text = c.beginText(50, 650)
     text.textLines(notes)
     c.drawText(text)
 
@@ -82,10 +103,29 @@ def generate():
     c.showPage()
     c.save()
 
+    # merge with window sticker
+    if sticker_file:
+
+        writer = PdfWriter()
+
+        main_pdf = PdfReader(pdf_file)
+        sticker_pdf = PdfReader(sticker_file)
+
+        for page in main_pdf.pages:
+            writer.add_page(page)
+
+        for page in sticker_pdf.pages:
+            writer.add_page(page)
+
+        merged_file = f"{stock}_complete.pdf"
+
+        with open(merged_file, "wb") as f:
+            writer.write(f)
+
+        return send_file(merged_file, as_attachment=True)
+
     return send_file(pdf_file, as_attachment=True)
 
-
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
