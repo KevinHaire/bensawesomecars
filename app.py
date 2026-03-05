@@ -99,8 +99,25 @@ def generate():
     text.textLines(notes)
     c.drawText(text)
 
-    if img_path:
-        c.drawImage(img_path, 50, 380, width="auto")
+from reportlab.lib.pagesizes import letter
+from PIL import Image
+
+if img_path:
+    # Open image to get original size
+    img = Image.open(img_path)
+    img_w, img_h = img.size
+
+    # Page dimensions
+    page_width, page_height = letter
+
+    # Scale image to full page width
+    scale = page_width / img_w
+    new_width = page_width
+    new_height = img_h * scale
+
+    # Position image 50pt from top of content area (adjust if needed)
+    y_position = 380  # or use: y_position = page_height - new_height - 50 for top margin
+    c.drawImage(img_path, 0, y_position, width=new_width, height=new_height)
 
     c.showPage()
     c.save()
