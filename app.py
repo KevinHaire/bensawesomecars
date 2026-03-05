@@ -100,7 +100,7 @@ def generate():
     c.drawText(text)
 
     if img_path:
-        c.drawImage(img_path, 50, 380)
+        c.drawImage(img_path, 50, 380, width="auto")
 
     c.showPage()
     c.save()
