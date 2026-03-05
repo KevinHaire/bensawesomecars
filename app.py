@@ -95,17 +95,30 @@ def generate():
     text.textLines(notes)
     c.drawText(text)
 
-    # full-width vehicle image
-    if img_path:
-        try:
-            img = Image.open(img_path)
-            scale = page_width / img.width
-            new_width = page_width
-            new_height = img.height * scale
-            y_position = 380  # adjust vertical position if needed
-            c.drawImage(img_path, 0, y_position, width=new_width, height=new_height)
-        except:
-            pass
+if img_path:
+    try:
+        img = Image.open(img_path)
+
+        img_w, img_h = img.size
+
+        # target width = 80% of page
+        target_width = page_width * 0.8
+
+        # maintain aspect ratio
+        scale = target_width / img_w
+        new_width = target_width
+        new_height = img_h * scale
+
+        # center horizontally
+        x_position = (page_width - new_width) / 2
+
+        # place below notes
+        y_position = 350
+
+        c.drawImage(img_path, x_position, y_position, width=new_width, height=new_height)
+
+    except:
+        pass
 
     c.showPage()
     c.save()
